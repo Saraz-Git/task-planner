@@ -10,7 +10,7 @@ const taskDescriptionInputEl = $('#task-description');
 
 //Initialize task array
 function readTasksFromStorage() {
-  const taskArr = JSON.parse(localStorage.getItem("tasks"));
+  let taskArr = JSON.parse(localStorage.getItem("tasks"));
   if (!taskArr) {
     taskArr = [];
   };
@@ -152,6 +152,7 @@ function handleDrop(event, ui) {
   // Save the updated projects array to localStorage (overwritting the previous one) and render the new project data to the screen.
   localStorage.setItem('tasks', JSON.stringify(toDropTasks));
   renderTaskList();
+  console.log(newStatus);
 };
 
 // Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
