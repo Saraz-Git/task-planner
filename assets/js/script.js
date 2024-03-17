@@ -2,12 +2,13 @@
 let taskList = JSON.parse(localStorage.getItem("tasks"));
 let nextId = JSON.parse(localStorage.getItem("nextId"));
 
-////Grab references to the elements
+//Grab references to the elements
 const taskFormEl = $('#task-form');
 const taskTitleInputEl = $('#task-title');
 const taskDateInputEl = $('#task-duedate');
 const taskDescriptionInputEl = $('#task-description');
-////Initialize task array
+
+//Initialize task array
 function readTasksFromStorage() {
   const taskArr = JSON.parse(localStorage.getItem("tasks"));
   if (!taskArr) {
@@ -16,15 +17,15 @@ function readTasksFromStorage() {
   return taskArr;
 };
 
-////Accept an array of task objects, stringify them and save to localStorage
+//Accept an array of task objects, stringify them and save to localStorage
 function saveTasksToStorage(tasks) {
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
 // Todo: create a function to generate a unique task id
 function generateTaskId() {
-  const taskId = crypto.randomUUID();
-
+  const uniqueId = crypto.randomUUID();
+  return uniqueId;
 }
 
 
@@ -58,7 +59,7 @@ function createTaskCard(task) {
 // Todo: create a function to render the task list and make cards draggable
 function renderTaskList() {
   const toRenderTasks = readTasksFromStorage();
-  const todoList = $('#todo-cards');
+  const todoList = $('#to-do-cards');
   todoList.empty();
   const inProgressList = $('#in-progress-cards');
   inProgressList.empty();
@@ -73,6 +74,23 @@ function renderTaskList() {
       doneList.append(createTaskCard(toRenderTask));
     };
   };
+
+  // Use JQuery UI to make task cards draggable
+  $('.draggable').draggable({
+    opacity: 0.7,
+    zIndex: 100,
+    // This is the function that creates the clone of the card that is dragged. This is purely visual and does not affect the data.
+    helper: function (e) {
+      // Check if the target of the drag event is the card itself or a child element. If it is the card itself, clone it, otherwise find the parent card  that is draggable and clone that.
+      const original = $(e.target).hasClass('ui-draggable')
+        ? $(e.target)
+        : $(e.target).closest('.ui-draggable');
+      // Return the clone with the width set to the width of the original card. This is so the clone does not take up the entire width of the lane. This is to also fix a visual bug where the card shrinks as it's dragged to the right.
+      return original.clone().css({
+        width: original.outerWidth(),
+      });
+    },
+  });
 };
 
 // Todo: create a function to handle adding a new task
@@ -116,31 +134,41 @@ function handleDeleteTask(event) {
 
 // Todo: create a function to handle dropping a task into a new status lane
 function handleDrop(event, ui) {
+  // Read projects from localStorage
+  let toDropTasks = readTasksFromStorage();
 
+  // Get the project id from the event
+  const taskId = ui.draggable[0].dataset.taskId;
 
+  // Get the id of the lane that the card was dropped into
+  const newStatus = event.target.id;
+
+  for (let toDropTask of toDropTasks) {
+    // Find the project card by the `id` and update the project status.
+    if (toDropTask.id === taskId) {
+      toDropTask.status = newStatus;
+    };
+  };
+  // Save the updated projects array to localStorage (overwritting the previous one) and render the new project data to the screen.
+  localStorage.setItem('tasks', JSON.stringify(toDropTasks));
+  renderTaskList();
 };
 
 // Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
 $(document).ready(function () {
   renderTaskList();
 
-  // ? Make lanes droppable
-  $('.lane').droppable({
-    accept: '.draggable',
-    drop: handleDrop,
-  });
   // Datepicker widget
   $('#task-duedate').datepicker({
     changeMonth: true,
     changeYear: true,
   });
 
+  $('.lane').droppable({
+    accept: '.draggable',
+    drop: handleDrop,
+  });
+
 });
-
-
-
-
-
-
 
 taskFormEl.on('submit', handleAddTask);
