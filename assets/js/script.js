@@ -1,14 +1,10 @@
-// Retrieve tasks and nextId from localStorage
-let taskList = JSON.parse(localStorage.getItem("tasks"));
-let nextId = JSON.parse(localStorage.getItem("nextId"));
-
 //Grab references to the elements
 const taskFormEl = $('#task-form');
 const taskTitleInputEl = $('#task-title');
 const taskDateInputEl = $('#task-duedate');
 const taskDescriptionInputEl = $('#task-description');
 
-//Initialize task array
+//Retrive task array
 function readTasksFromStorage() {
   let taskArr = JSON.parse(localStorage.getItem("tasks"));
   if (!taskArr) {
@@ -20,16 +16,15 @@ function readTasksFromStorage() {
 //Accept an array of task objects, stringify them and save to localStorage
 function saveTasksToStorage(tasks) {
   localStorage.setItem('tasks', JSON.stringify(tasks));
-}
+};
 
-// Todo: create a function to generate a unique task id
+// Create a function to generate a unique task id
 function generateTaskId() {
   const uniqueId = crypto.randomUUID();
   return uniqueId;
-}
+};
 
-
-// Todo: create a function to create a task card
+// Create a function to create a task card
 function createTaskCard(task) {
   const taskCard = $('<div>')
     .addClass('card task-card project-card draggable my-3')
@@ -37,13 +32,13 @@ function createTaskCard(task) {
   const cardHeader = $('<div>').addClass('card-header h4').text(task.title);
   const cardBody = $('<div>').addClass('card-body');
   const cardDescription = $('<p>').addClass('card-text').text(task.description);
-  const cardDueDate = $('<p>').addClass('card-text').text(task.dueDate);
+  const cardDueDate = $('<p>').addClass('card-text').text(dayjs(task.dueDate).format('DD/MM/YYYY'));
   const cardDelBtn = $('<button>').addClass('btn btn-danger delete').text('Delete').attr('data-task-id', task.id);
   cardDelBtn.on('click', handleDeleteTask);
 
   if (task.dueDate && task.status !== 'done') {
     const now = dayjs();
-    const taskDue = dayjs(task.dueDate, 'DD/MM/YYYY');
+    const taskDue = task.dueDate;
     if (now.isSame(taskDue, 'day')) {
       taskCard.addClass('bg-warning text-white');
     } else if (now.isAfter(taskDue)) {
@@ -56,10 +51,10 @@ function createTaskCard(task) {
   return taskCard;
 };
 
-// Todo: create a function to render the task list and make cards draggable
+// Create a function to render the task list and make cards draggable
 function renderTaskList() {
   const toRenderTasks = readTasksFromStorage();
-  const todoList = $('#to-do-cards');
+  const todoList = $('#todo-cards');
   todoList.empty();
   const inProgressList = $('#in-progress-cards');
   inProgressList.empty();
@@ -93,21 +88,20 @@ function renderTaskList() {
   });
 };
 
-// Todo: create a function to handle adding a new task
+// Create a function to handle adding a new task
 function handleAddTask(event) {
   event.preventDefault();
   const taskTitle = taskTitleInputEl.val().trim();
-  const taskDate = taskDateInputEl.val(); //yyyy-mm-dd format
+  const taskDate = taskDateInputEl.val();
   const taskDescription = taskDescriptionInputEl.val().trim();
 
   const newTask = {
-    id: crypto.randomUUID(),
+    id: generateTaskId(),
     title: taskTitle,
     dueDate: taskDate,
     description: taskDescription,
     status: 'to-do',
   };
-  console.log(newTask);
   const tasks = readTasksFromStorage();
   //Pull the tasks from localStorage and push the new task to the array
   tasks.push(newTask);
@@ -119,7 +113,7 @@ function handleAddTask(event) {
   taskDescriptionInputEl.val('');
 };
 
-// Todo: create a function to handle deleting a task
+// Create a function to handle deleting a task
 function handleDeleteTask(event) {
   const selectedId = $(this).attr('data-task-id');
   const allTasks = readTasksFromStorage();
@@ -132,7 +126,7 @@ function handleDeleteTask(event) {
   renderTaskList();
 };
 
-// Todo: create a function to handle dropping a task into a new status lane
+// Create a function to handle dropping a task into a new status lane
 function handleDrop(event, ui) {
   // Read projects from localStorage
   let toDropTasks = readTasksFromStorage();
@@ -152,24 +146,23 @@ function handleDrop(event, ui) {
   // Save the updated projects array to localStorage (overwritting the previous one) and render the new project data to the screen.
   localStorage.setItem('tasks', JSON.stringify(toDropTasks));
   renderTaskList();
-  console.log(newStatus);
 };
 
-// Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
+// When the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
 $(document).ready(function () {
   renderTaskList();
 
-  // Datepicker widget
-  $('#task-duedate').datepicker({
-    changeMonth: true,
-    changeYear: true,
-  });
+  taskFormEl.on('submit', handleAddTask);
 
   $('.lane').droppable({
     accept: '.draggable',
     drop: handleDrop,
   });
 
+  // Datepicker widget
+  $('#task-duedate').datepicker({
+    changeMonth: true,
+    changeYear: true,
+  });
+  
 });
-
-taskFormEl.on('submit', handleAddTask);
