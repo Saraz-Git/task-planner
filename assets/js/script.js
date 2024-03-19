@@ -111,6 +111,7 @@ function handleAddTask(event) {
   taskTitleInputEl.val('');
   taskDateInputEl.val('');
   taskDescriptionInputEl.val('');
+  $('#formModal').modal('hide');
 };
 
 // Create a function to handle deleting a task
